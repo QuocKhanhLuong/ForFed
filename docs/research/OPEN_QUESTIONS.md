@@ -1,8 +1,8 @@
 # Câu hỏi nghiên cứu đang mở
 
-Cập nhật: **2026-09-07**. Nguồn xuất phát: [ghi chú SARIF v1](../papers/SARIF_v1.md), đặc biệt Eq.1–14, Tables 3/8 và failure cases ở §5 Q2 của paper.
+Cập nhật: **2026-09-11**. Nguồn xuất phát: [ghi chú SARIF v1](../papers/SARIF_v1.md), đặc biệt Eq.1–14, Tables 3/8 và failure cases ở §5 Q2 của paper. Định hướng mới từ giảng viên được ghi riêng tại [DIFFUSION_DIRECTION.md](DIFFUSION_DIRECTION.md).
 
-Đây là danh sách điều cần kiểm chứng, **không phải kết quả thí nghiệm hoặc kiến trúc đã chọn**. Giai đoạn hiện tại vẫn là hiểu/kiểm chứng SARIF; chưa bắt đầu survey FL/unlearning trong bộ tài liệu này.
+Đây là danh sách điều cần kiểm chứng, **không phải kết quả thí nghiệm hoặc kiến trúc đã chọn**. SARIF vẫn là paper xuất phát để hiểu forensic localization, nhưng diffusion hiện là trục kỹ thuật cần ưu tiên khảo sát trước khi chốt bài toán cuối.
 
 ## Q0 — Baseline SARIF chính xác là phiên bản nào?
 
@@ -64,16 +64,46 @@ Không gọi tổn thương thật là giả chỉ vì bất thường; không g
 
 Cần tách pixel localization khỏi image-level decision; chốt threshold mà không dùng test GT. Kiểm tra đáp ứng trên authentic ngoài miền, xử lý mask rỗng và calibration nếu có. Không quy FPR 5.1 trong paper thành tỷ lệ ảnh báo sai hoặc accuracy xác thực.
 
-## Q6 — Dữ liệu và nhu cầu nào đủ biện minh hướng mở rộng?
+## Q6 — Diffusion sẽ đóng vai trò nào trong bài toán forensic?
 
-**Trạng thái:** để sau khi hiểu baseline và có phép đo vấn đề.
+**Trạng thái:** ưu tiên cao; chưa chốt.
 
-Ba nhánh giữ riêng: A — forensic trên ảnh y tế; B — forensic trong federated/non-IID; C — kết hợp cả hai khi dữ liệu và nhu cầu thực tế hỗ trợ. Chưa chọn modality, cơ quan, bệnh, manipulation generator, site split hoặc thuật toán FL. Unlearning là nhánh phụ chưa được chọn.
+Ba cách hiểu phải được tách riêng:
 
-Trước khi mở rộng, cần xác định đối tượng phát hiện, nhãn, dữ liệu authentic/tampered, quyền truy cập của từng bên, đối chứng công bằng và điều kiện có thể bác bỏ giả thuyết. Không bắt đầu bằng thay SAM thành MedSAM hay thêm FedAvg rồi coi đó là đóng góp.
+- **D1 — Forensics of diffusion:** phát hiện/định vị ảnh hoặc vùng được tạo/chỉnh sửa bằng diffusion models.
+- **D2 — Diffusion for forensics:** dùng denoising/reconstruction/score/latent representations của diffusion làm forensic evidence.
+- **D3 — Federated diffusion / federated forensic learning:** đưa D1/D2 vào multi-client/non-IID hoặc nghiên cứu diffusion trong FL.
+
+Trước mắt cần survey D1 và D2. D3 chỉ được đưa vào sau khi có threat model và dữ liệu/nhu cầu biện minh. Không xem `diffusion + FedAvg` là contribution tự thân.
+
+**Bằng chứng cần để chốt hướng:** paper gần nhất, benchmark phù hợp, định nghĩa positive class, nhãn có sẵn, generalization gap rõ, và một pilot có thể bác bỏ giả thuyết.
+
+## Q7 — Cue liên quan diffusion có thực sự đặc hiệu cho manipulation không?
+
+**Trạng thái:** câu hỏi mới cần kiểm tra sau targeted survey.
+
+Nếu dùng reconstruction error, denoising trajectory, predicted noise, latent feature hoặc model fingerprint, cần kiểm tra cue có phản ứng chủ yếu với **thao tác diffusion** hay chỉ với generator family, compression, resolution, semantic content hoặc preprocessing.
+
+Pilot tối thiểu nên có các factor được tách:
+
+1. pristine vs manipulated;
+2. seen vs unseen diffusion generator/editor;
+3. benign post-processing như JPEG/resize/screenshot;
+4. nếu có thể, cùng semantic content nhưng khác provenance/manipulation history.
+
+Một cue vẫn phân biệt generator nhưng thất bại trên unseen editor hoặc benign transform không được gọi là manipulation-specific.
+
+## Q8 — Dữ liệu và nhu cầu nào đủ biện minh hướng medical/federated?
+
+**Trạng thái:** để sau khi D1/D2 đủ rõ.
+
+Ảnh y tế và federated/non-IID vẫn là các hướng mở rộng, không phải mặc định. Chưa chọn modality, cơ quan, bệnh, manipulation generator, site split hoặc thuật toán FL. Unlearning là nhánh phụ chưa được chọn.
+
+Trước khi mở rộng, cần xác định đối tượng phát hiện, nhãn, dữ liệu authentic/tampered, quyền truy cập của từng bên, đối chứng công bằng và điều kiện có thể bác bỏ giả thuyết. Không bắt đầu bằng thay SAM thành MedSAM, thay backbone thành diffusion hoặc thêm FedAvg rồi coi đó là đóng góp.
 
 ## Điều kiện chuyển bước
 
 1. Khóa nguồn và baseline đủ để phân biệt lỗi tái lập với giới hạn phương pháp.
-2. Chọn một câu hỏi cơ chế có bằng chứng ban đầu hoặc phép kiểm tra khả thi; chưa cần kiến trúc mới.
-3. Chỉ bắt đầu khảo sát mở rộng khi phạm vi được yêu cầu; ghi kết quả mới vào docs và nhật ký, giữ giả thuyết tách khỏi kết luận.
+2. Hoàn thành targeted survey D1/D2 để biết bài toán diffusion forensic gần nhất và benchmark thực sự tồn tại.
+3. Chọn một câu hỏi cơ chế có bằng chứng ban đầu hoặc phép kiểm tra khả thi; chưa cần kiến trúc mới.
+4. Chỉ mở medical/federated khi phạm vi được biện minh bởi dữ liệu và threat model; ghi kết quả mới vào docs và nhật ký, giữ giả thuyết tách khỏi kết luận.
